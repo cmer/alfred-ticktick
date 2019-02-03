@@ -11,8 +11,8 @@ username = ENV['USERNAME']
 password = ENV['PASSWORD']
 title    = ARGV[0]
 
-exit_to_alfred("Username and Password are required. Exiting.", 1) unless username && password
-exit_to_alfred("Title is required. Exiting.", 1) if title.to_s.strip == ""
+exit_message("Username and Password are required. Exiting.", 1) unless username && password
+exit_message("Title is required. Exiting.", 1) if title.to_s.strip == ""
 
 def add_task(username, password, task_title:)
   headers    = { 'Content-Type' => 'application/json' }
@@ -24,20 +24,20 @@ def add_task(username, password, task_title:)
   resp, data  = http.post(AUTH_URL, { username: username, password: password}.to_json, headers)
       cookie = { 'Cookie' => resp.to_hash['set-cookie'].collect { |ea| ea[/^.*?;/] }.join }
 
-  exit_to_alfred("Login failed. Exiting.", exit_code: 1) unless resp.is_a?(Net::HTTPOK) if JSON.parse(resp.body)["errorCode"]
+  exit_message("Login failed. Exiting.", exit_code: 1) unless resp.is_a?(Net::HTTPOK) if JSON.parse(resp.body)["errorCode"]
 
   # Create Task
   data = { sortOrder: 1, title: task_title }.to_json
   resp, data = http.post(ADD_TASK_URL, data, headers.merge(cookie))
 
   if resp.is_a?(Net::HTTPOK)
-    exit_to_alfred(message: "'#{task_title}' was added", title: "Task added successfully.")
+    exit_message(message: "'#{task_title}' was added", title: "Task added successfully.")
   else
-    exit_to_alfred("Task creation failed with code: #{resp.code}. Exiting.", exit_code: 1)
+    exit_message("Task creation failed with code: #{resp.code}. Exiting.", exit_code: 1)
   end
 end
 
-def exit_to_alfred(message, exit_code: 0, title: nil, arg: nil)
+def exit_message(message, exit_code: 0, title: nil, arg: nil)
   if title.nil?
     title = case exit_code
       when 0; 'Success!'
@@ -47,7 +47,7 @@ def exit_to_alfred(message, exit_code: 0, title: nil, arg: nil)
 
   arg ||= message
 
-  output = { items: [ { title: title, subtitle: message, arg: arg, icon: 'icon.png' } ] }
+  output = { title: title, subtitle: message }
   puts output.to_json
   exit exit_code
 end
