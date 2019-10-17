@@ -1,4 +1,3 @@
 #!/bin/bash
 
-cd src
-zip -r ../"Add to TickTick.alfredworkflow" *
+zip -r "Add to TickTick.alfredworkflow" src/*
